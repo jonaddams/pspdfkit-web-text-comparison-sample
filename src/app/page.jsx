@@ -7,7 +7,8 @@ export default function Page() {
   const originalDoc = "text-comparison-a.pdf";
   const changedDoc = "text-comparison-b.pdf";
   const numberOfContextWords = 100;
-  const licenseKey = "";
+  const licenseKey =
+    "ApNLcz02GMDbM8_TfiqABPfXIJug7EfIulKyZMU69d0zj13E6gGfQl3NytKQhhzUBk379FKaeKhf1XklJ0V77405JJPwghns-7g7WpLAs6hkFW32jyeU9k8TzVcTCjtnF8Y2akaIfWb-FgLH9XnxSmj9swTSKFk0bYu6CyaxDOle7XtRdf0UL_Fw--CbN1XyAkqg6pshDTNvNj6RBHj8XD9Bugls3X8Afj0JrIKqwxRptJkhKGVi6LIAzu5hMvNurwoOBFlqhtlm4WO_GzcnScv2Zj9RjYj2t9ze2lREgQdzIErs_jDCB3VirbJCq7eebqllPhwoV9DK9icYs19zN3DcV8v_HrQsjd1vW9HJvdVLm7Gx4RY0FxJQ-K0Zl0J9kluniJnIJbrp6aEQ8VvdbfvIj2SZBwKz79CJ3WIHDH7Soli1GGjzlcw70DxuYJ1fZZP0JdLL8_F3Y9SJVSwYBJMdW-rl0EecI25gX6JwmCx8qvfOmMnbjBV7lLX7kfJ8r0rXIxUnIZ2eOoWueNtIVJMxkj6gyga0ZKXH0QpJjC-Eb3MwUFrmmUS_BjmlYyVnLRju68niJHW-dGEsz9Jbv2Zh2DvPTuW7wSI-qXG25KpsOxcI3TIqGBkvjKEVotfMcjHHl0NgVy6Ozij_iqtvdg==";
 
   // CDN URL for PSPDFKit for Web, could use .env to store these values
   const cdnUrl = "https://cdn.cloud.pspdfkit.com";
