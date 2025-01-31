@@ -2,7 +2,10 @@
 
 ## Document Processing Workflow
 
+See the [Nutrient Guide](https://www.nutrient.io/guides/web/comparison/compare-text/#programmatic-text-comparison) for More Information
+
 ### 1. Initialization Process
+
 ```
 Load Original PDF ──┐
                    ├──► Set up synchronized viewers
@@ -10,6 +13,7 @@ Load Changed PDF ───┘
 ```
 
 ### 2. Page-by-Page Processing
+
 ```
 For each page:
 ┌─► Create document descriptors for both PDFs
@@ -24,12 +28,13 @@ For each page:
 │   │
 │   ├─► Create highlight annotations
 │   │
-│   └─► Update changes map for sidebar
+│   └─► Update operations map for sidebar
 │
 └─► Move to next page
 ```
 
-### 3. Change Tracking Structure
+### 3. Document Changes Tracking Structure
+
 ```javascript
 Operation Map Structure:
 {
@@ -40,21 +45,25 @@ Operation Map Structure:
     insert: boolean
   }
 }
+A deletion and insertion is a replacement
 ```
 
 ### 4. UI Update Flow
+
 ```
-Changes ──► Calculate Text Differences ──► Update Operations Map ──► Trigger Re-render ──► Update Sidebar
+Load SDK, Load Documents ──► Calculate Text Differences Per Page ──► Add Highlight Annotations Per Page ──► Update Operations Map Per Page ──► Trigger Re-render After Last Page ──► Update Sidebar Component
 ```
 
 ## Key Implementation Features
 
 1.  **Change Detection**
-   - Low-level text comparison
-   - Configurable context word count
-   - Efficient diff algorithm implementation
-   
+
+- Low-level text comparison
+- Configurable context word count
+- Efficient diff algorithm implementation
+
 2. **Coordinate System**
+
    - Coordinate-based annotation for accurate difference highlighting
    - Automatic adjustment for different page sizes and orientations
 

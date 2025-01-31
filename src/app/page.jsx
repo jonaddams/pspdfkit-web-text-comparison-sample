@@ -135,7 +135,7 @@ export default function Page() {
                 })
               );
 
-              // Update or create delete change entry
+              // If the coordinate already exists, add the deleteText value
               if (changes.has(coordinate)) {
                 changes.set(coordinate, {
                   ...changes.get(coordinate),
