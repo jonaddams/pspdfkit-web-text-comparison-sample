@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# PDF Text Comparison Tool
 
-## Getting Started
+A Next.js application that provides side-by-side comparison of two PDF documents, highlighting text differences using Nutrient's Web SDK.
 
-First, run the development server:
+## Features
+
+- Side-by-side PDF document comparison
+- Real-time text difference highlighting
+  - Deletions (pink/red - #FFC9CB)
+  - Insertions (blue - #C0D8EF)
+  - Replacements (shown as both deletion and insertion)
+- Synchronized document viewing
+  - Scrolling synchronization
+  - Zoom level synchronization
+- Interactive changes sidebar
+  - Lists all modifications
+  - Shows change type (inserted/deleted/replaced)
+  - Displays modified text with highlighting
+  - Visual indicators (+1/-1) for changes
+
+## Technical Implementation
+
+The application uses:
+- Next.js for the framework
+- PSPDFKit Web SDK for PDF handling
+- React for the UI components
+- Tailwind for layout and styles
+
+For detailed technical information about the implementation, including the document processing workflow and architecture, see [Technical Details](./details.md).
+
+### Core Components
+
+1. **Document Viewers**
+
+   - Left viewer: Original document
+   - Right viewer: Modified document
+   - Synchronized viewing controls
+
+2. **Text Comparison Engine**
+
+   - Page-by-page processing
+   - Context-aware text difference detection
+   - Coordinate-based highlight annotations
+
+3. **Change Tracking**
+   - Maps coordinate data to text changes
+   - Maintains change history per page
+   - Provides real-time sidebar updates
+
+## Setup
+
+1. Place your PDF files in the public directory:
+
+   - `text-comparison-a.pdf` (original document)
+   - `text-comparison-b.pdf` (modified document)
+
+2. Configure environment variables:
+   - Create a `.env.local` file in the root directory
+   - Add your license key:
+     ```
+     NEXT_PUBLIC_NUTRIENT_LICENSE_KEY="your-license-key"
+     ```
+
+3. Install dependencies:
+
+```bash
+npm install
+# or
+yarn install
+# or 
+pnpm install
+```
+
+4. Run the development server:
 
 ```bash
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Configuration
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+Key configuration options in `page.jsx`:
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+- `numberOfContextWords`: Controls the context size for text comparison (default: 100)
+- `deleteHighlightColor`: Color for deleted text highlights
+- `insertHighlightColor`: Color for inserted text highlights
 
-## Learn More
+## License
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+This project uses PSPDFKit Web SDK, which requires a license key for production use.

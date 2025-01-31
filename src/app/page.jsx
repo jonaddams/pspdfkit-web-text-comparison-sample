@@ -1,38 +1,40 @@
 "use client";
 import ReactDOM from "react-dom";
-import {useEffect, useRef, useState} from "react";
+import { useEffect, useRef, useState } from "react";
 import Script from "next/script";
 
 export default function Page() {
   const originalDoc = "text-comparison-a.pdf";
   const changedDoc = "text-comparison-b.pdf";
   const numberOfContextWords = 100;
-  const licenseKey =
-    "ApNLcz02GMDbM8_TfiqABPfXIJug7EfIulKyZMU69d0zj13E6gGfQl3NytKQhhzUBk379FKaeKhf1XklJ0V77405JJPwghns-7g7WpLAs6hkFW32jyeU9k8TzVcTCjtnF8Y2akaIfWb-FgLH9XnxSmj9swTSKFk0bYu6CyaxDOle7XtRdf0UL_Fw--CbN1XyAkqg6pshDTNvNj6RBHj8XD9Bugls3X8Afj0JrIKqwxRptJkhKGVi6LIAzu5hMvNurwoOBFlqhtlm4WO_GzcnScv2Zj9RjYj2t9ze2lREgQdzIErs_jDCB3VirbJCq7eebqllPhwoV9DK9icYs19zN3DcV8v_HrQsjd1vW9HJvdVLm7Gx4RY0FxJQ-K0Zl0J9kluniJnIJbrp6aEQ8VvdbfvIj2SZBwKz79CJ3WIHDH7Soli1GGjzlcw70DxuYJ1fZZP0JdLL8_F3Y9SJVSwYBJMdW-rl0EecI25gX6JwmCx8qvfOmMnbjBV7lLX7kfJ8r0rXIxUnIZ2eOoWueNtIVJMxkj6gyga0ZKXH0QpJjC-Eb3MwUFrmmUS_BjmlYyVnLRju68niJHW-dGEsz9Jbv2Zh2DvPTuW7wSI-qXG25KpsOxcI3TIqGBkvjKEVotfMcjHHl0NgVy6Ozij_iqtvdg==";
+  const licenseKey = process.env.NEXT_PUBLIC_NUTRIENT_LICENSE_KEY;
 
   // CDN URL for PSPDFKit for Web, could use .env to store these values
   const cdnUrl = "https://cdn.cloud.pspdfkit.com";
-  const pspdfkitBaseUrl = `${cdnUrl}/pspdfkit-web@2024.4.0/`;
+  const pspdfkitBaseUrl = `${cdnUrl}/pspdfkit-web@2024.8.1/`;
   const src = `${pspdfkitBaseUrl}pspdfkit.js`;
   ReactDOM.preconnect(cdnUrl);
 
-  const [operationsMap, setOperationsMap] = useState(new Map());
+  // State management for tracking document changes
+  const [operationsMap, setOperationsMap] = useState(new Map()); // UI state for rendering changes in the sidebar
+  const originalContainerRef = useRef(null); // Ref for the original document viewer container
+  const changedContainerRef = useRef(null); // Ref for the changed document viewer container
+  const operationsRef = useRef(new Map()); // Ref for tracking changes across all pages
 
-  const originalContainerRef = useRef(null);
-  const changedContainerRef = useRef(null);
-  const operationsRef = useRef(new Map());
-
+  // Trigger re-render by updating state
   function updateOperationsMap(existingMap) {
     setOperationsMap(new Map(existingMap));
   }
 
-  const deleteHighlightColor = {r: 255, g: 201, b: 203}; // #FFC9CB
-  const insertHighlightColor = {r: 192, g: 216, b: 239}; // #C0D8EF
+  // Highlight colors for deletions and insertions
+  // See tailwind.config.js for color definitions in the tailwind theme
+  const deleteHighlightColor = { r: 255, g: 201, b: 203 }; // Light red for deletions
+  const insertHighlightColor = { r: 192, g: 216, b: 239 }; // Light blue for insertions
 
   async function compareDocuments() {
     if (window.PSPDFKit) {
-      // importing PSPDFKit through the PSPDFKit CDN
-      // if you want to add through a package manager, use the following:
+      // This example is importing PSPDFKit through the PSPDFKit CDN
+      // If you want to add through a package manager, use the following:
       // import("pspdfkit").then(async (PSPDFKit) => {});
 
       const originalContainer = originalContainerRef.current;
@@ -86,140 +88,144 @@ export default function Page() {
 
       let totalPageCount = await originalInstance.totalPageCount;
 
-      // iterate through each page
-      for (let i = 0; i < totalPageCount; i++) {
-        console.log("comparing page: ", i + 1, " of ", totalPageCount);
+      // Process each page in the document
+      for (let pageIndex = 0; pageIndex < totalPageCount; pageIndex++) {
+        console.log(`comparing page: ${pageIndex + 1} of ${totalPageCount}`);
 
+        // Create a document descriptor for the original document
         const originalDocument = new window.PSPDFKit.DocumentDescriptor({
           filePath: originalDoc,
-          pageIndexes: [i],
+          pageIndexes: [pageIndex],
         });
 
+        // Create a document descriptor for the changed document
         const changedDocument = new window.PSPDFKit.DocumentDescriptor({
           filePath: changedDoc,
-          pageIndexes: [i],
+          pageIndexes: [pageIndex],
         });
 
-        // create the comparison data
-        const textComparisonOperation = new window.PSPDFKit.ComparisonOperation(window.PSPDFKit.ComparisonOperationType.TEXT, {
-          numberOfContextWords: numberOfContextWords,
-        });
-
-        const comparisonResult = await originalInstance.compareDocuments({originalDocument, changedDocument}, textComparisonOperation);
-
-        let originalInstanceRects = window.PSPDFKit.Immutable.List([
-          // new PSPDFKit.Geometry.Rect({
-          //   left: 10,
-          //   top: 10,
-          //   width: 200,
-          //   height: 10,
-          // }),
-        ]);
-
+        // Initialize variables for storing text comparison results
+        let originalInstanceRects = window.PSPDFKit.Immutable.List([]);
         let changedInstanceRects = window.PSPDFKit.Immutable.List([]);
-
-        let originalPageInfo = await originalInstance.pageInfoForIndex(i);
-        let changedPageInfo = await changedInstance.pageInfoForIndex(i);
-
         let changes = new Map();
-        for (let j = 0; j < comparisonResult.length; j++) {
-          for (let k = 0; k < comparisonResult[j].documentComparisonResults.length; k++) {
-            for (let l = 0; l < comparisonResult[j].documentComparisonResults[k].comparisonResults.length; l++) {
-              for (let m = 0; m < comparisonResult[j].documentComparisonResults[k].comparisonResults[l].hunks.length; m++) {
-                for (let n = 0; n < comparisonResult[j].documentComparisonResults[k].comparisonResults[l].hunks[m].operations.length; n++) {
-                  let operation = comparisonResult[j].documentComparisonResults[k].comparisonResults[l].hunks[m].operations[n];
-                  switch (operation.type) {
-                    case "equal":
-                      break;
-                    case "delete":
-                      originalInstanceRects = originalInstanceRects.push(
-                        new PSPDFKit.Geometry.Rect(
-                          new PSPDFKit.Geometry.Rect({
-                            left: operation.originalTextBlocks[0].rect[0],
-                            // defect in CORE, submitted a bug report, should only need to get rect[1]
-                            top: originalPageInfo.height - operation.originalTextBlocks[0].rect[1] - operation.originalTextBlocks[0].rect[3],
-                            width: operation.originalTextBlocks[0].rect[2],
-                            height: operation.originalTextBlocks[0].rect[3],
-                          })
-                        )
-                      );
 
-                      // left + top
-                      let delCoord = operation.changedTextBlocks[0].rect[0].toString() + "," + operation.changedTextBlocks[0].rect[1].toString();
+        // Get page info for coordinate calculations
+        let originalPageInfo = await originalInstance.pageInfoForIndex(pageIndex);
+        let changedPageInfo = await changedInstance.pageInfoForIndex(pageIndex);
 
-                      if (changes.has(delCoord)) {
-                        changes.set(delCoord, {
-                          insertText: changes.get(delCoord).insertText,
-                          insert: changes.get(delCoord).insert,
-                          deleteText: operation.text,
-                          del: true,
-                        });
-                      } else {
-                        changes.set(delCoord, {
-                          deleteText: operation.text,
-                          del: true,
-                        });
-                      }
+        // Configure text comparison
+        const textComparisonOperation = new window.PSPDFKit.ComparisonOperation(window.PSPDFKit.ComparisonOperationType.TEXT, { numberOfContextWords });
 
-                      break;
-                    case "insert":
-                      changedInstanceRects = changedInstanceRects.push(
-                        new PSPDFKit.Geometry.Rect(
-                          new PSPDFKit.Geometry.Rect({
-                            left: operation.changedTextBlocks[0].rect[0],
-                            // defect in CORE, submitted a bug report, should only need to get rect[1]
-                            top: changedPageInfo.height - operation.changedTextBlocks[0].rect[1] - operation.changedTextBlocks[0].rect[3],
-                            width: operation.changedTextBlocks[0].rect[2],
-                            height: operation.changedTextBlocks[0].rect[3],
-                          })
-                        )
-                      );
+        // Perform text comparison
+        const comparisonResult = await originalInstance.compareDocuments({ originalDocument, changedDocument }, textComparisonOperation);
 
-                      let insertCoord = operation.changedTextBlocks[0].rect[0].toString() + "," + operation.changedTextBlocks[0].rect[1].toString();
+        // Process comparison results
+        function processOperation(operation) {
+          const rect = operation.changedTextBlocks[0].rect;
+          const coordinate = `${rect[0]},${rect[1]}`;
 
-                      if (changes.has(insertCoord)) {
-                        changes.set(insertCoord, {
-                          deleteText: changes.get(insertCoord).deleteText,
-                          del: changes.get(insertCoord).del,
-                          insertText: operation.text,
-                          insert: true,
-                        });
-                      } else {
-                        changes.set(insertCoord, {
-                          insertText: operation.text,
-                          insert: true,
-                        });
-                      }
+          switch (operation.type) {
+            case "delete":
+              originalInstanceRects = originalInstanceRects.push(
+                new PSPDFKit.Geometry.Rect({
+                  left: operation.originalTextBlocks[0].rect[0],
+                  top: originalPageInfo.height - operation.originalTextBlocks[0].rect[1] - operation.originalTextBlocks[0].rect[3],
+                  width: operation.originalTextBlocks[0].rect[2],
+                  height: operation.originalTextBlocks[0].rect[3],
+                })
+              );
 
-                      break;
-                    default:
-                      break;
-                  }
-                }
+              // Update or create delete change entry
+              if (changes.has(coordinate)) {
+                changes.set(coordinate, {
+                  ...changes.get(coordinate),
+                  deleteText: operation.text,
+                  del: true,
+                });
+              } else {
+                changes.set(coordinate, {
+                  deleteText: operation.text,
+                  del: true,
+                });
               }
-            }
-          }
-        } // end of for comparisonResult iteration
+              break;
 
+            case "insert":
+              changedInstanceRects = changedInstanceRects.push(
+                new PSPDFKit.Geometry.Rect({
+                  left: rect[0],
+                  top: changedPageInfo.height - rect[1] - rect[3], // Adjust for coordinate system
+                  width: rect[2],
+                  height: rect[3],
+                })
+              );
+
+              // Update or create insert change entry
+              if (changes.has(coordinate)) {
+                changes.set(coordinate, {
+                  ...changes.get(coordinate),
+                  insertText: operation.text,
+                  insert: true,
+                });
+              } else {
+                changes.set(coordinate, {
+                  insertText: operation.text,
+                  insert: true,
+                });
+              }
+              break;
+          }
+        }
+
+        // Iterate through comparison results structure
+        comparisonResult.forEach((comparison) => {
+          console.log("comparison\n", comparison);
+          comparison.documentComparisonResults.forEach((docComparison) => {
+            docComparison.comparisonResults.forEach((result) => {
+              result.hunks.forEach((hunk) => {
+                hunk.operations.forEach((operation) => {
+                  if (operation.type !== "equal") {
+                    processOperation(operation);
+                  }
+                });
+              });
+            });
+          });
+        });
+
+        /*
+        Update the operations map, merge new changes with existing changes.
+        This is necessary because the comparison is done per page
+        and we need to accumulate changes across all pages to display them in the sidebar.
+        The key is the coordinate of the change.
+        The value is an object with the text that was deleted and inserted
+        and flags to indicate the type of change.
+        e.g. { "0,0": { deleteText: "old text", insertText: "new text", del: true, insert: true } }
+        The flags are used to determine the type of change and render appropriate styling in the sidebar.
+        The sidebar displays the number of words changed and the actual text that was deleted and inserted
+        */
         operationsRef.current = new Map([...operationsRef.current, ...changes]);
 
+        // Create highlight annotations for the original document
         let originalAnnotations = new window.PSPDFKit.Annotations.HighlightAnnotation({
-          pageIndex: i,
+          pageIndex,
           rects: originalInstanceRects,
           color: new window.PSPDFKit.Color(deleteHighlightColor),
         });
 
+        // Create highlight annotations for the changed document
         let changedAnnotations = new window.PSPDFKit.Annotations.HighlightAnnotation({
-          pageIndex: i,
+          pageIndex,
           rects: changedInstanceRects,
           color: new window.PSPDFKit.Color(insertHighlightColor),
         });
 
+        // Add annotations to the documents
         await originalInstance.create(originalAnnotations);
         await changedInstance.create(changedAnnotations);
-      } // end of for totalPageCount iteration
+      }
 
-      // update state, which should trigger re-render
+      // Update state to trigger re-render
       updateOperationsMap(operationsRef.current);
     }
   }
@@ -228,23 +234,34 @@ export default function Page() {
     compareDocuments();
   }, []);
 
+  // Add helper function to count words
+  function countWords(text) {
+    return text ? text.trim().split(/\s+/).length : 0;
+  }
+
+  // Display the number of words added and removed
   function plusMinusDisplayText(operation) {
+    const deleteCount = operation.deleteText ? countWords(operation.deleteText) : 0;
+    const insertCount = operation.insertText ? countWords(operation.insertText) : 0;
+
     if (operation.insert && operation.del) {
       return (
         <div className="text-xs">
-          <span className="bg-[#FFC9CB]">-1</span> | <span className="bg-[#C0D8EF]">+1</span>
+          <span className="bg-delete-highlight">-{deleteCount}</span>
+          {" | "}
+          <span className="bg-insert-highlight">+{insertCount}</span>
         </div>
       );
     } else if (operation.insert) {
       return (
         <div className="text-xs">
-          <span className="bg-[#C0D8EF]">+1</span>
+          <span className="bg-insert-highlight">+{insertCount}</span>
         </div>
       );
     } else {
       return (
         <div className="text-xs">
-          <span className="bg-[#FFC9CB]">-1</span>
+          <span className="bg-delete-highlight">-{deleteCount}</span>
         </div>
       );
     }
@@ -283,10 +300,10 @@ export default function Page() {
                   </div>
                   <div>
                     <p className="text-xs">
-                      <span className="bg-[#FFC9CB]">{value.deleteText}</span>
+                      <span className="bg-delete-highlight">{value.deleteText}</span>
                     </p>
                     <p className="text-xs">
-                      <span className="bg-[#C0D8EF]">{value.insertText}</span>
+                      <span className="bg-insert-highlight">{value.insertText}</span>
                     </p>
                   </div>
                 </div>
