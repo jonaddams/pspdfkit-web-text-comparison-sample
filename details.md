@@ -51,7 +51,8 @@ A deletion and insertion is a replacement
 ### 4. UI Update Flow
 
 ```
-Load SDK, Load Documents ──► Calculate Text Differences Per Page ──► Add Highlight Annotations Per Page ──► Update Operations Map Per Page ──► Trigger Re-render After Last Page ──► Update Sidebar Component
+Load SDK, Load Documents ──► Calculate Text Differences Per Page ──► Add Highlight Annotations Per Page ──► 
+Update Operations Map Per Page ──► Trigger Re-render After Last Page ──► Update Sidebar Component
 ```
 
 ## Key Implementation Features
