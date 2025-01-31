@@ -31,6 +31,13 @@ export default function Page() {
   const deleteHighlightColor = { r: 255, g: 201, b: 203 }; // Light red for deletions
   const insertHighlightColor = { r: 192, g: 216, b: 239 }; // Light blue for insertions
 
+  /*
+  Main function to compare documents:
+  This function loads the original and changed documents in PSPDFKit viewers
+  and compares the text content of each page to identify changes
+  It then creates highlight annotations for the changes and updates the state
+  to trigger a re-render of the sidebar with the changes
+  */
   async function compareDocuments() {
     if (window.PSPDFKit) {
       // This example is importing PSPDFKit through the PSPDFKit CDN
@@ -127,6 +134,7 @@ export default function Page() {
           switch (operation.type) {
             case "delete":
               originalInstanceRects = originalInstanceRects.push(
+                // Annotations for the original document
                 new PSPDFKit.Geometry.Rect({
                   left: operation.originalTextBlocks[0].rect[0],
                   top: originalPageInfo.height - operation.originalTextBlocks[0].rect[1] - operation.originalTextBlocks[0].rect[3],
@@ -135,7 +143,8 @@ export default function Page() {
                 })
               );
 
-              // If the coordinate already exists, add the deleteText value
+              // Sidebar changes Map
+              // If the coordinate already exists, add the deleteText value in the existing object
               if (changes.has(coordinate)) {
                 changes.set(coordinate, {
                   ...changes.get(coordinate),
@@ -152,6 +161,7 @@ export default function Page() {
 
             case "insert":
               changedInstanceRects = changedInstanceRects.push(
+                // Annotations for the changed document
                 new PSPDFKit.Geometry.Rect({
                   left: rect[0],
                   top: changedPageInfo.height - rect[1] - rect[3], // Adjust for coordinate system
@@ -160,6 +170,7 @@ export default function Page() {
                 })
               );
 
+              // Sidebar changes Map
               // Update or create insert change entry
               if (changes.has(coordinate)) {
                 changes.set(coordinate, {
@@ -194,7 +205,7 @@ export default function Page() {
         });
 
         /*
-        Update the operations map, merge new changes with existing changes.
+        Update the stateful operations map, merge new changes with existing changes.
         This is necessary because the comparison is done per page
         and we need to accumulate changes across all pages to display them in the sidebar.
         The key is the coordinate of the change.
@@ -230,16 +241,12 @@ export default function Page() {
     }
   }
 
-  useEffect(() => {
-    compareDocuments();
-  }, []);
-
   // Add helper function to count words
   function countWords(text) {
     return text ? text.trim().split(/\s+/).length : 0;
   }
 
-  // Display the number of words added and removed
+  // Display the number of words added and removed in the sidebar
   function plusMinusDisplayText(operation) {
     const deleteCount = operation.deleteText ? countWords(operation.deleteText) : 0;
     const insertCount = operation.insertText ? countWords(operation.insertText) : 0;
@@ -267,6 +274,10 @@ export default function Page() {
     }
   }
 
+  useEffect(() => {
+    compareDocuments();
+  }, []);
+
   return (
     <div>
       {/* PSPDFKit CDN, remove if including via package manager */}
@@ -292,6 +303,7 @@ export default function Page() {
           <div className="sm:block border-1">
             <p className="p-3">Changes</p>
             <div>
+              {/* display individual operations */}
               {Array.from(operationsMap).map(([key, value]) => (
                 <div key={key} className="p-1 border border-gray-400 border-1 rounded mx-auto mb-2 w-11/12">
                   <div className="flex justify-between p-1 pl-0">
