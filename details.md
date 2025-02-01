@@ -28,7 +28,7 @@ For each page:                                          // for loop in compareDo
 │   │
 │   ├─► Create highlight annotations for page           // createHighlightAnnotations()
 │   │
-│   └─► Update stateful operationsRef                   // operationsRef.current
+│   └─► Update stateful operationsRef with changes      // operationsRef.current
 │
 └─► Move to next page                                   // continue loop
 ```
