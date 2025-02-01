@@ -12,47 +12,41 @@ Load Original PDF ──┐
 Load Changed PDF ───┘
 ```
 
-### 2. Page-by-Page Processing
+### 2. Compare Text Page-by-Page 
 
 ```
-For each page:
-┌─► Create document descriptors for both PDFs
+For each page:                                         // for loop in compareDocuments()
+┌─► Create document descriptors for both PDFs          // originalDocument and changedDocument creation
 │   │
-│   ├─► Get page information (dimensions, etc.)
+│   ├─► Get page information (dimensions, etc.)        // originalPageInfo and changedPageInfo
 │   │
-│   ├─► Perform text comparison
+│   ├─► Perform text comparison                        // textComparisonOperation and comparisonResult
 │   │   │
-│   │   └─► For each difference found:
-│   │       ├─► Process deletions (mark in red)
-│   │       └─► Process insertions (mark in blue)
+│   │   └─► For each difference found:                 // processOperation() function
+│   │       ├─► Create annotations in corresponding temporary array // originalInstanceRects, changedInstanceRects
+│   │       └─► Create entries in temporary Map        // changes Map
 │   │
-│   ├─► Create highlight annotations
+│   ├─► Create highlight annotations for page          // createHighlightAnnotations()
 │   │
-│   └─► Update operations map for sidebar
+│   └─► Update stateful operationsRef                  // operationsRef.current
 │
-└─► Move to next page
+└─► Move to next page                                  // continue loop
 ```
 
-### 3. Document Changes Tracking Structure
-
-```javascript
-Operation Map Structure:
-{
-  "coordinate": {
-    deleteText: "removed text",
-    insertText: "added text",
-    del: boolean,
-    insert: boolean
-  }
-}
-A deletion and insertion is a replacement
-```
-
-### 4. UI Update Flow
+### 2.1 Sidebar Operations Display
 
 ```
-Load SDK, Load Documents ──► Calculate Text Differences Per Page ──► Add Highlight Annotations Per Page ──► 
-Update Operations Map Per Page ──► Trigger Re-render After Last Page ──► Update Sidebar Component
+After document comparison operations are complete:
+Trigger a state update to the operations map           // updateOperationsMap
+   │
+   └─► Iterate map of changes, applies visual styling
+```
+
+### 3. UI Update Flow
+
+```
+Load Documents in Viewers ──► Add Highlight Annotations Per Page ──► 
+Trigger Re-render After Last Page ──► Sidebar Component Renders
 ```
 
 ## Key Implementation Features

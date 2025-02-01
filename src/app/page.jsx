@@ -111,9 +111,10 @@ export default function Page() {
           pageIndexes: [pageIndex],
         });
 
-        // Initialize variables for storing text comparison results
+        // Variables for storing temporary annotation data for each page
         let originalInstanceRects = window.PSPDFKit.Immutable.List([]);
         let changedInstanceRects = window.PSPDFKit.Immutable.List([]);
+        // Map to store changes for each page
         let changes = new Map();
 
         // Get page info for coordinate calculations
@@ -188,6 +189,27 @@ export default function Page() {
           }
         }
 
+        // Helper function to create and add highlight annotations
+        async function createHighlightAnnotations(pageIndex, originalRects, changedRects, originalInstance, changedInstance) {
+          // Create highlight annotations for the original document
+          let originalAnnotations = new window.PSPDFKit.Annotations.HighlightAnnotation({
+            pageIndex,
+            rects: originalRects,
+            color: new window.PSPDFKit.Color(deleteHighlightColor),
+          });
+
+          // Create highlight annotations for the changed document
+          let changedAnnotations = new window.PSPDFKit.Annotations.HighlightAnnotation({
+            pageIndex,
+            rects: changedRects,
+            color: new window.PSPDFKit.Color(insertHighlightColor),
+          });
+
+          // Add annotations to the documents
+          await originalInstance.create(originalAnnotations);
+          await changedInstance.create(changedAnnotations);
+        }
+
         // Iterate through comparison results structure
         comparisonResult.forEach((comparison) => {
           console.log("comparison\n", comparison);
@@ -205,7 +227,7 @@ export default function Page() {
         });
 
         /*
-        Update the stateful operations map, merge new changes with existing changes.
+        Update the stateful operations Map, merge new changes with existing changes.
         This is necessary because the comparison is done per page
         and we need to accumulate changes across all pages to display them in the sidebar.
         The key is the coordinate of the change.
@@ -217,23 +239,8 @@ export default function Page() {
         */
         operationsRef.current = new Map([...operationsRef.current, ...changes]);
 
-        // Create highlight annotations for the original document
-        let originalAnnotations = new window.PSPDFKit.Annotations.HighlightAnnotation({
-          pageIndex,
-          rects: originalInstanceRects,
-          color: new window.PSPDFKit.Color(deleteHighlightColor),
-        });
-
-        // Create highlight annotations for the changed document
-        let changedAnnotations = new window.PSPDFKit.Annotations.HighlightAnnotation({
-          pageIndex,
-          rects: changedInstanceRects,
-          color: new window.PSPDFKit.Color(insertHighlightColor),
-        });
-
-        // Add annotations to the documents
-        await originalInstance.create(originalAnnotations);
-        await changedInstance.create(changedAnnotations);
+        // Create and add highlight annotations
+        await createHighlightAnnotations(pageIndex, originalInstanceRects, changedInstanceRects, originalInstance, changedInstance);
       }
 
       // Update state to trigger re-render
