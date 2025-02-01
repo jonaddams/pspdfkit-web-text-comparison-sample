@@ -46,7 +46,7 @@ Trigger a state update to the operations map           // updateOperationsMap
 
 ```
 Load Documents in Viewers ──► Add Highlight Annotations Per Page ──►
-Trigger Re-render After Last Page ──► Sidebar Component Renders
+Trigger Re-render After Last Comparison ──► Sidebar Component Renders
 ```
 
 ## Key Implementation Features
@@ -64,4 +64,3 @@ Trigger Re-render After Last Page ──► Sidebar Component Renders
 
 3. **Memory Management**
    - Page-by-page processing prevents memory issues with large documents
-   - Efficient garbage collection through proper cleanup
