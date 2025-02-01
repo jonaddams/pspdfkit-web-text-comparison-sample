@@ -12,25 +12,25 @@ Load Original PDF ──┐
 Load Changed PDF ───┘
 ```
 
-### 2. Compare Text Page-by-Page 
+### 2. Compare Text Page-by-Page
 
 ```
-For each page:                                         // for loop in compareDocuments()
-┌─► Create document descriptors for both PDFs          // originalDocument and changedDocument creation
+For each page:                                          // for loop in compareDocuments()
+┌─► Create document descriptors for both PDFs           // originalDocument and changedDocument creation
 │   │
-│   ├─► Get page information (dimensions, etc.)        // originalPageInfo and changedPageInfo
+│   ├─► Get page information (dimensions, etc.)         // originalPageInfo and changedPageInfo
 │   │
-│   ├─► Perform text comparison                        // textComparisonOperation and comparisonResult
+│   ├─► Perform text comparison                         // textComparisonOperation and comparisonResult
 │   │   │
-│   │   └─► For each difference found:                 // processOperation() function
-│   │       ├─► Create annotations in corresponding temporary array // originalInstanceRects, changedInstanceRects
-│   │       └─► Create entries in temporary Map        // changes Map
+│   │   └─► For each difference found:                  // processOperation() function
+│   │       ├─► Create annotations in temporary arrays  // originalInstanceRects, changedInstanceRects
+│   │       └─► Create entries in temporary Map         // changes Map
 │   │
-│   ├─► Create highlight annotations for page          // createHighlightAnnotations()
+│   ├─► Create highlight annotations for page           // createHighlightAnnotations()
 │   │
-│   └─► Update stateful operationsRef                  // operationsRef.current
+│   └─► Update stateful operationsRef                   // operationsRef.current
 │
-└─► Move to next page                                  // continue loop
+└─► Move to next page                                   // continue loop
 ```
 
 ### 2.1 Sidebar Operations Display
@@ -45,7 +45,7 @@ Trigger a state update to the operations map           // updateOperationsMap
 ### 3. UI Update Flow
 
 ```
-Load Documents in Viewers ──► Add Highlight Annotations Per Page ──► 
+Load Documents in Viewers ──► Add Highlight Annotations Per Page ──►
 Trigger Re-render After Last Page ──► Sidebar Component Renders
 ```
 
