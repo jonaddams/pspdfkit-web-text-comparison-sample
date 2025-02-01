@@ -22,7 +22,7 @@ A Next.js application that provides side-by-side comparison of two PDF documents
 
 The application uses:
 - Next.js for the framework
-- PSPDFKit Web SDK for PDF handling
+- Nutrient Web SDK for PDF handling
 - React for the UI components
 - Tailwind for layout and styles
 
@@ -89,4 +89,4 @@ Key configuration options in `page.jsx`:
 
 ## License
 
-This project uses PSPDFKit Web SDK, which requires a license key for production use.
+This project uses Nutrient Web SDK, which requires a license key for production use.
